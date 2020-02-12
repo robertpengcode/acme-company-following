@@ -1,112 +1,120 @@
 <html>
-  <head>
-      <link rel="stylesheet" href="styles.css">
-<style>
+    <head>
+        <link rel="stylesheet" href="styles.css">
+        <script src='https://cdnjs.cloudflare.com/ajax/libs/axios/0.18.0/axios.js'></script>
+        <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+        <script src="https://unpkg.com/react@16/umd/react.development.js" crossorigin></script>
+        <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js" crossorigin></script>
+    </head>
 
-</style>
-    <script src='https://cdnjs.cloudflare.com/ajax/libs/axios/0.18.0/axios.js'></script>
-    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
-    <script src="https://unpkg.com/react@16/umd/react.development.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js" crossorigin></script>
-  </head>
-  <body>
-    <div id='root'></div>
-    <script type='text/babel'>
-    const {Component} = React;
-    const {render} = ReactDOM;
-    const API = 'https://acme-users-api-rev.herokuapp.com/api';
+    <body>
+        <div id='root'></div>
+        <script type='text/babel'>
+            const {Component} = React;
+            const {render} = ReactDOM;
+            const API = 'https://acme-users-api-rev.herokuapp.com/api';
 
-    const Header = ({user, followings}) => {
-        //console.log({user});
-        return (
-            <div>
-            <h1>Acme Company Follower</h1>
-            <h2>You ({user.fullName}) are following {followings.length} Companies</h2>
-            </div>
-        )
-    }
-
-    const fetchUser = async () => {
-            const storage = window.localStorage;
-            const userId = storage.getItem('userId');
-            if (userId) {
-                try {
-                    return (await axios.get(`${API}/users/detail/${userId}`)).data;
-                }
-                catch(ex) {
-                    storage.removeItem('userId');
-                    return fetchUser();
-                }
+            const Header = ({user, followings}) => {
+                return (
+                    <div>
+                        <h1>Acme Company Follower</h1>
+                        <h2>You ({user.fullName}) are following {followings.length} Companies</h2>
+                    </div>
+                )
             }
-            const user = (await axios.get(`${API}/users/random`)).data;
-            storage.setItem('userId', user.id);
-            return user;
-        }
 
-    const Companies = ({companies, followings}) => {
-        const followingsArr = followings.map(follow => follow.companyId);
-        //console.log(followingsArr);
-
-        return (
-            <ul>
-                {companies.map((company, idx) => {
-                    // console.log(company.id);
-                    if (followingsArr.includes(company.id)) {
-                        //console.log(company);
-                        return (<li key={idx} className='followed'>
-                        {company.name}
-                    </li>);
-
-
+            const fetchUser = async () => {
+                const storage = window.localStorage;
+                const userId = storage.getItem('userId');
+                if (userId) {
+                    try {
+                        return (await axios.get(`${API}/users/detail/${userId}`)).data;
                     }
-
-                    return (<li key={idx}>
-                        {company.name}
-                    </li>);
-                })}
-            </ul>
-        )
-    }
-    
-    class App  extends Component {
-        constructor() {
-            super();
-            this.state = {
-                companies: [],
-                user: {},
-                followings: [],
+                    catch(ex) {
+                        storage.removeItem('userId');
+                        return fetchUser();
+                    }
+                }
+                const user = (await axios.get(`${API}/users/random`)).data;
+                storage.setItem('userId', user.id);
+                return user;
             }
-        }
 
-        async componentDidMount() {
-            const user = await fetchUser();
-            console.log(user.id);
-            const companies = (await axios.get(`${API}/companies`)).data;
-            //console.log(companies);
+            const Companies = ({companies, followings}) => {
+                const followingsArr = followings.map(follow => follow.companyId);
+                return (
+                    <ul>
+                        {companies.map((company, idx) => {
+                            if (followingsArr.includes(company.id)) {
+                                return (
+                                <li key={idx} className='followed'>
+                                    {company.name}
+                                    <select value={company.rating}>
+                                        <option value='1'> 1 </option>    
+                                        <option value='2'> 2 </option>    
+                                        <option value='3'> 3 </option>    
+                                        <option value='4'> 4 </option>    
+                                        <option value='5'> 5 </option>    
+                                        <option value=''> </option>    
+                                    </select>
+                                    <hr/>
+                                </li>
+                                );
+                            }
 
-            const followings = (await axios.get(`${API}/users/${user.id}/followingCompanies`)).data;
-            //console.log(followings);
-            this.setState({user, companies, followings});
-        }
-        
+                            return (
+                            <li key={idx}>
+                                {company.name}
+                                <select value =''>
+                                    <option value='1'> 1 </option>
+                                    <option value='2'> 2 </option>
+                                    <option value='3'> 3 </option>
+                                    <option value='4'> 4 </option>
+                                    <option value='5'> 5 </option>
+                                    <option value=''> </option>
+                                </select>
+                                <hr/>
+                            </li>
+                            );
+                        })}
+                    </ul>
+                )
+            }
+    
+            class App  extends Component {
+                constructor() {
+                    super();
+                    this.state = {
+                        companies: [],
+                        user: {},
+                        followings: [],
+                    }
+                }
 
-        render() {
-            const {user, followings, companies} = this.state;
-            
-            return (
-                <main>
-                <Header user={user} followings={followings}/>
-                <Companies companies={companies} followings={followings}/>
-                </main>
-            );
-        }
+                async componentDidMount() {
+                    const user = await fetchUser();
+                    const companies = (await axios.get(`${API}/companies`)).data;
 
-    }
+                    const followings = (await axios.get(`${API}/users/${user.id}/followingCompanies`)).data;
+                    this.setState({user, companies, followings});
+                }
+                
 
+                render() {
+                    const {user, followings, companies} = this.state;
+                    
+                    return (
+                        <main>
+                        <Header user={user} followings={followings}/>
+                        <Companies companies={companies} followings={followings}/>
+                        </main>
+                    );
+                }
 
+            }
 
-      const root = document.querySelector('#root');
-      ReactDOM.render(<App />, root);
-    </script>
-  </body>
+            const root = document.querySelector('#root');
+            ReactDOM.render(<App />, root);
+        </script>
+    </body>
 </html>

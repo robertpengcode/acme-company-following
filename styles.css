@@ -1,4 +1,14 @@
+li {
+    padding: 1rem;
+}
+
+li > select {
+    width: 100%;
+}
+
 ul {
+    display: flex;
+    flex-direction: column;
     list-style-type: none;
 }
 
